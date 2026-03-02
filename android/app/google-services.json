@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "902629826920",
+    "project_id": "merveille-investments",
+    "storage_bucket": "merveille-investments.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902629826920:android:e71bf951cae169106bb6dd",
+        "android_client_info": {
+          "package_name": "com.example.miapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1czW_JpHtmSc3ifNnu5GwHNnRHBA4QB8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
