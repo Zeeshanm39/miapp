@@ -1668,7 +1668,14 @@ class _MyLoginState extends State<MyLogin> with SingleTickerProviderStateMixin {
           );
 
           // Navigate directly to dashboard
-          Navigator.pushReplacementNamed(context, 'dashboard');
+          // Navigator.pushReplacementNamed(context, 'dashboard');
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+// Do NOT navigate manually
+// AuthGate will automatically redirect
 
         } on FirebaseAuthException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -93,6 +93,8 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'auth_gate.dart';
+
 class SplashVideoScreen extends StatefulWidget {
   const SplashVideoScreen({super.key});
 
@@ -131,10 +133,15 @@ class _SplashVideoScreenState extends State<SplashVideoScreen> {
 
         final user = FirebaseAuth.instance.currentUser;
 
-        Navigator.pushReplacementNamed(
-          context,
-          user == null ? 'login' : 'dashboard',
-        );
+        // Navigator.pushReplacementNamed(
+        //   context,
+        //   user == null ? 'login' : 'dashboard',
+        // );
+      //   Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(builder: (_) => const AuthGate()),
+      //   );
+        Navigator.pushReplacementNamed(context, 'auth');
       });
     }
   }

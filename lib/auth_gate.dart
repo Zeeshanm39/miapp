@@ -39,41 +39,16 @@
 //   }
 // }
 
+//
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:miapp/verify_email.dart';
 import 'dashboard.dart';
 import 'login.dart';
 
-class AuthGate extends StatefulWidget {
+class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
-
-  @override
-  State<AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<AuthGate> {
-  bool _isSyncing = false;
-
-  Future<void> _syncEmailVerification(User user) async {
-    if (_isSyncing) return;
-
-    _isSyncing = true;
-
-    await user.reload();
-    final refreshedUser = FirebaseAuth.instance.currentUser!;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(refreshedUser.uid)
-        .update({
-      'emailVerified': refreshedUser.emailVerified,
-    });
-
-    _isSyncing = false;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,21 +64,43 @@ class _AuthGateState extends State<AuthGate> {
 
         final user = snapshot.data;
 
-        // ❌ Not logged in
+        /// ❌ Not logged in
         if (user == null) {
           return const MyLogin();
         }
 
-        // 🔄 Sync verification status
-        _syncEmailVerification(user);
+        /// 🔥 Logged in → check Firestore document
+        return FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get(),
+          builder: (context, userSnapshot) {
 
-        // 🚨 Logged in but email NOT verified
-        if (!user.emailVerified) {
-          return const VerifyEmailScreen();
-        }
+            if (userSnapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-        // ✅ Logged in + verified
-        return const DashboardPage();
+            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              FirebaseAuth.instance.signOut();
+              return const MyLogin();
+            }
+
+            final userDoc =
+            userSnapshot.data!.data() as Map<String, dynamic>;
+
+            /// 🚫 Account disabled from Firestore
+            if (userDoc['isActive'] == false) {
+              FirebaseAuth.instance.signOut();
+              return const MyLogin();
+            }
+
+            /// ✅ Everything valid → Dashboard
+            return const DashboardPage();
+          },
+        );
       },
     );
   }

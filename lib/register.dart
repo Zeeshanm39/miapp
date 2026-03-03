@@ -1441,7 +1441,7 @@
         await user.reload();
 
         // 4️⃣ Send verification email
-        await user.sendEmailVerification();
+        // await user.sendEmailVerification();
 
         // 5️⃣ Save user document in Firestore
         await firestore.collection('users').doc(user.uid).set({
@@ -1449,7 +1449,7 @@
           'email': user.email,
           'name': fullNameController.text.trim(),
           'role': 'user',
-          'emailVerified': false,
+          // 'emailVerified': false,
           'isActive': true,
           'createdAt': FieldValue.serverTimestamp(),
           'lastLogin': FieldValue.serverTimestamp(),

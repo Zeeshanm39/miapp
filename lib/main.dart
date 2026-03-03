@@ -31,10 +31,51 @@
 //     );
 //   }
 // }
+// import 'package:flutter/material.dart';
+// import 'package:firebase_core/firebase_core.dart';
+//
+// import 'firebase_options.dart';
+// import 'login.dart';
+// import 'register.dart';
+// import 'profile_page.dart';
+// import 'dashboard.dart';
+// import 'splash_video.dart';
+// import 'about.dart';
+//
+// // void main() {
+// //   runApp(const MyApp());
+// // }
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); // 🔥 REQUIRED
+//   await Firebase.initializeApp();
+//   runApp(const MyApp());
+// }
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       initialRoute: 'splash',
+//       routes: {
+//         'splash': (context) => const SplashVideoScreen(),
+//         'login': (context) => const MyLogin(),
+//         'register': (context) => const MyRegister(),
+//         'dashboard': (context) => const DashboardPage(),
+//         'profile': (context) => const MyProfile(),
+//         'about': (context) => const About(),
+//       },
+//     );
+//   }
+// }
+// --------Auth gate introduce to logout control---------
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'firebase_options.dart';
+
+import 'auth_gate.dart';
 import 'login.dart';
 import 'register.dart';
 import 'profile_page.dart';
@@ -42,15 +83,12 @@ import 'dashboard.dart';
 import 'splash_video.dart';
 import 'about.dart';
 
-// void main() {
-//   runApp(const MyApp());
-// }
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); // 🔥 REQUIRED
   await Firebase.initializeApp();
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -58,9 +96,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: 'splash',
+
+      home: const SplashVideoScreen(), // 👈 start with splash
+
       routes: {
-        'splash': (context) => const SplashVideoScreen(),
+        'auth': (context) => const AuthGate(),   // 👈 ADD THIS
         'login': (context) => const MyLogin(),
         'register': (context) => const MyRegister(),
         'dashboard': (context) => const DashboardPage(),
