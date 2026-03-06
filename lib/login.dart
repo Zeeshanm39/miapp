@@ -1661,11 +1661,11 @@ class _MyLoginState extends State<MyLogin> with SingleTickerProviderStateMixin {
     return GestureDetector(
       onTap: () async {
         try {
-          UserCredential userCredential = await FirebaseAuth.instance
-              .signInWithEmailAndPassword(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-          );
+          // UserCredential userCredential = await FirebaseAuth.instance
+          //     .signInWithEmailAndPassword(
+          //   email: emailController.text.trim(),
+          //   password: passwordController.text.trim(),
+          // );
 
           // Navigate directly to dashboard
           // Navigator.pushReplacementNamed(context, 'dashboard');
