@@ -1,8 +1,10 @@
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -13,15 +15,11 @@ class AnalyticsPage extends StatefulWidget {
 
 class _AnalyticsPageState extends State<AnalyticsPage>
     with SingleTickerProviderStateMixin {
+
   static const Color black = Color(0xFF080808);
   static const Color gold = Color(0xFFD4AF37);
 
   late AnimationController _controller;
-
-  int totalInvestors = 0;
-  double totalInvestment = 0;
-  double totalPaid = 0;
-  double totalBalance = 0;
 
   @override
   void initState() {
@@ -32,8 +30,6 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     _controller =
     AnimationController(vsync: this, duration: const Duration(seconds: 8))
       ..repeat();
-
-    loadAnalytics();
   }
 
   @override
@@ -49,34 +45,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     return double.tryParse(value.toString()) ?? 0;
   }
 
-  Future<void> loadAnalytics() async {
-    final snapshot =
-    await FirebaseFirestore.instance.collection("investments").get();
-
-    double investment = 0;
-    double paid = 0;
-    double balance = 0;
-
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-
-      investment += safeDouble(data["investmentAmount"]);
-      paid += safeDouble(data["paidTillDate"]);
-      balance += safeDouble(data["balanceProfit"]);
-    }
-
-    setState(() {
-      totalInvestors = snapshot.docs.length;
-      totalInvestment = investment;
-      totalPaid = paid;
-      totalBalance = balance;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     return Stack(
       children: [
+
         /// ANIMATED BACKGROUND
         AnimatedBuilder(
           animation: _controller,
@@ -93,116 +69,155 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           },
         ),
 
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ListView(
-              children: [
-                const SizedBox(height: 20),
+        /// FIRESTORE STREAM
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection("investments")
+              .where("ownerUid", isEqualTo: uid)
+              .snapshots(),
+          builder: (context, snapshot) {
 
-                const Text(
-                  "Analytics Overview",
-                  style: TextStyle(
-                      color: gold,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold),
-                ),
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                const SizedBox(height: 30),
+            double totalInvestment = 0;
+            double totalPaid = 0;
+            double totalBalance = 0;
 
-                /// KPI CARDS
-                Row(
+            final docs = snapshot.data!.docs;
+
+            for (var doc in docs) {
+              final data = doc.data() as Map<String, dynamic>;
+
+              totalInvestment += safeDouble(data["investmentAmount"]);
+              totalPaid += safeDouble(data["paidTillDate"]);
+              totalBalance += safeDouble(data["balanceProfit"]);
+            }
+
+            int totalInvestors = docs.length;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ListView(
                   children: [
-                    _glassCard("Investors", totalInvestors.toString(),
-                        Icons.people),
-                    const SizedBox(width: 12),
-                    _glassCard("Investment",
-                        totalInvestment.toStringAsFixed(0), Icons.account_balance),
-                  ],
-                ),
 
-                const SizedBox(height: 12),
+                    const SizedBox(height: 20),
 
-                Row(
-                  children: [
-                    _glassCard("Paid", totalPaid.toStringAsFixed(0),
-                        Icons.payments),
-                    const SizedBox(width: 12),
-                    _glassCard("Balance",
-                        totalBalance.toStringAsFixed(0), Icons.trending_down),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
-                const Text(
-                  "Investment Distribution",
-                  style: TextStyle(
-                      color: gold,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 20),
-
-                SizedBox(
-                  height: 260,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 3,
-                      centerSpaceRadius: 50,
-                      sections: [
-                        _pieSection(totalInvestment, "Investment"),
-                        _pieSection(totalPaid, "Paid"),
-                        _pieSection(totalBalance, "Balance"),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                const Text(
-                  "Profit Growth",
-                  style: TextStyle(
-                      color: gold,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 20),
-
-                SizedBox(
-                  height: 250,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(show: false),
-                      titlesData: FlTitlesData(show: false),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: [
-                            const FlSpot(0, 2),
-                            const FlSpot(1, 3),
-                            const FlSpot(2, 5),
-                            const FlSpot(3, 3),
-                            const FlSpot(4, 6),
-                            const FlSpot(5, 8),
-                          ],
-                          isCurved: true,
+                    const Text(
+                      "Analytics Overview",
+                      style: TextStyle(
                           color: gold,
-                          barWidth: 4,
-                          dotData: FlDotData(show: false),
-                        )
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    /// KPI CARDS
+                    Row(
+                      children: [
+                        _glassCard(
+                            "Investors",
+                            totalInvestors.toString(),
+                            Icons.people),
+                        const SizedBox(width: 12),
+                        _glassCard(
+                            "Investment",
+                            totalInvestment.toStringAsFixed(0),
+                            Icons.account_balance),
                       ],
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 50),
-              ],
-            ),
-          ),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        _glassCard(
+                            "Paid",
+                            totalPaid.toStringAsFixed(0),
+                            Icons.payments),
+                        const SizedBox(width: 12),
+                        _glassCard(
+                            "Balance",
+                            totalBalance.toStringAsFixed(0),
+                            Icons.trending_down),
+                      ],
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    const Text(
+                      "Investment Distribution",
+                      style: TextStyle(
+                          color: gold,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      height: 260,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 3,
+                          centerSpaceRadius: 50,
+                          sections: [
+                            _pieSection(totalInvestment, "Investment"),
+                            _pieSection(totalPaid, "Paid"),
+                            _pieSection(totalBalance, "Balance"),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    const Text(
+                      "Profit Growth",
+                      style: TextStyle(
+                          color: gold,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      height: 250,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: false),
+                          titlesData: FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: [
+                                FlSpot(0, totalInvestment * 0.2),
+                                FlSpot(1, totalInvestment * 0.35),
+                                FlSpot(2, totalInvestment * 0.5),
+                                FlSpot(3, totalInvestment * 0.6),
+                                FlSpot(4, totalInvestment * 0.75),
+                                FlSpot(5, totalInvestment * 0.9),
+                              ],
+                              isCurved: true,
+                              color: gold,
+                              barWidth: 4,
+                              dotData: FlDotData(show: false),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 50),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -241,7 +256,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     );
   }
 
-  /// PIE CHART SECTION
+  /// PIE CHART
   PieChartSectionData _pieSection(double value, String title) {
     return PieChartSectionData(
       color: gold,
@@ -249,7 +264,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       title: title,
       radius: 70,
       titleStyle: const TextStyle(
-          fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.black),
     );
   }
 }
