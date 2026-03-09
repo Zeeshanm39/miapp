@@ -335,9 +335,9 @@ class _DashboardPageState extends State<DashboardPage>
                   "Number of Investments", investors.toString(), Icons.people),
               _glassCard("Total Investment", investment.toStringAsFixed(0),
                   Icons.account_balance),
-              _glassCard("Paid", paid.toStringAsFixed(0), Icons.payments),
+              _glassCard("Amount Paid", paid.toStringAsFixed(0), Icons.payments),
               _glassCard(
-                  "Balance", balance.toStringAsFixed(0), Icons.trending_down),
+                  "Total Balance", balance.toStringAsFixed(0), Icons.trending_down),
             ],
           );
         },

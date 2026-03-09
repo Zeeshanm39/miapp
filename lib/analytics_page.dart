@@ -119,12 +119,12 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                     Row(
                       children: [
                         _glassCard(
-                            "Investors",
+                            "Number of Investments",
                             totalInvestors.toString(),
                             Icons.people),
                         const SizedBox(width: 12),
                         _glassCard(
-                            "Investment",
+                            "Total Investment",
                             totalInvestment.toStringAsFixed(0),
                             Icons.account_balance),
                       ],
@@ -135,12 +135,12 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                     Row(
                       children: [
                         _glassCard(
-                            "Paid",
+                            "Amount Paid",
                             totalPaid.toStringAsFixed(0),
                             Icons.payments),
                         const SizedBox(width: 12),
                         _glassCard(
-                            "Balance",
+                            "Total Balance",
                             totalBalance.toStringAsFixed(0),
                             Icons.trending_down),
                       ],
@@ -228,7 +228,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     return Expanded(
       child: Container(
         height: 120,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
@@ -240,22 +240,32 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           border: Border.all(color: gold.withOpacity(.3)),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: gold),
-            const Spacer(),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
-            Text(title, style: const TextStyle(color: Colors.white60)),
+            Icon(icon, color: gold, size: 22),
+
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
   /// PIE CHART
   PieChartSectionData _pieSection(double value, String title) {
     return PieChartSectionData(
