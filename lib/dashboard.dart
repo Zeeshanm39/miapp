@@ -1072,6 +1072,7 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
+  /// Safe number
   double safeDouble(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value.toDouble();
@@ -1080,6 +1081,7 @@ class _DashboardPageState extends State<DashboardPage>
     return 0;
   }
 
+  /// Safe date
   DateTime? safeDate(dynamic value) {
     if (value == null) return null;
     if (value is Timestamp) return value.toDate();
@@ -1087,11 +1089,13 @@ class _DashboardPageState extends State<DashboardPage>
     return null;
   }
 
+  /// Format date
   String formatDate(DateTime? date) {
-    if (date == null) return "-";
+    if (date == null) return "Not set";
     return "${date.day}/${date.month}/${date.year}";
   }
 
+  /// Fetch username
   Future<void> fetchUserName() async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -1140,7 +1144,7 @@ class _DashboardPageState extends State<DashboardPage>
             },
           ),
 
-          SafeArea(child: _pages())
+          SafeArea(child: _pages()),
         ],
       ),
       bottomNavigationBar: _bottomNav(),
@@ -1160,6 +1164,7 @@ class _DashboardPageState extends State<DashboardPage>
     }
   }
 
+  /// Drawer
   Widget _drawer() {
     return Drawer(
       backgroundColor: black,
@@ -1223,12 +1228,16 @@ class _DashboardPageState extends State<DashboardPage>
 
             _drawerItem(Icons.person, "Profile", () {
               Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const MyProfile()));
+                context,
+                MaterialPageRoute(builder: (_) => const MyProfile()),
+              );
             }),
 
             _drawerItem(Icons.info_outline, "About", () {
               Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const About()));
+                context,
+                MaterialPageRoute(builder: (_) => const About()),
+              );
             }),
 
             const Spacer(),
@@ -1237,7 +1246,8 @@ class _DashboardPageState extends State<DashboardPage>
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text("Logout",
                   style: TextStyle(
-                      color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold)),
               onTap: logout,
             )
           ],
@@ -1254,6 +1264,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
+  /// Dashboard
   Widget _dashboard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -1301,7 +1312,9 @@ class _DashboardPageState extends State<DashboardPage>
           const Text(
             "Active Investments",
             style: TextStyle(
-                color: gold, fontSize: 20, fontWeight: FontWeight.bold),
+                color: gold,
+                fontSize: 20,
+                fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 15),
@@ -1312,6 +1325,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
+  /// Investor cards
   Widget _investorCards() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -1346,6 +1360,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
+  /// Glass card
   Widget _glassInvestorCard(Map<String, dynamic> data) {
 
     double investment = safeDouble(data['investmentAmount']);
@@ -1360,12 +1375,12 @@ class _DashboardPageState extends State<DashboardPage>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              color: Colors.white.withOpacity(.05),
+              color: Colors.white.withOpacity(.06),
               border: Border.all(color: Colors.white.withOpacity(.15)),
             ),
             child: Column(
@@ -1383,7 +1398,7 @@ class _DashboardPageState extends State<DashboardPage>
 
                 const SizedBox(height: 15),
 
-                /// Stats Row
+                /// Stats
                 Row(
                   children: [
                     _miniStat("Investment", investment),
@@ -1396,25 +1411,33 @@ class _DashboardPageState extends State<DashboardPage>
 
                 const SizedBox(height: 15),
 
-                /// Contract Dates
+                /// Dates
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
 
-                    const Icon(Icons.calendar_today,
-                        color: Colors.white70, size: 18),
-
-                    const SizedBox(width: 6),
-
-                    Text(
-                      "Start: ${formatDate(startDate)}",
-                      style: const TextStyle(color: Colors.white70),
+                    Row(
+                      children: [
+                        const Icon(Icons.play_circle,
+                            color: Colors.greenAccent, size: 18),
+                        const SizedBox(width: 5),
+                        Text(
+                          formatDate(startDate),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(width: 15),
-
-                    Text(
-                      "End: ${formatDate(endDate)}",
-                      style: const TextStyle(color: Colors.white70),
+                    Row(
+                      children: [
+                        const Icon(Icons.stop_circle,
+                            color: Colors.redAccent, size: 18),
+                        const SizedBox(width: 5),
+                        Text(
+                          formatDate(endDate),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
                     ),
                   ],
                 )
@@ -1429,20 +1452,35 @@ class _DashboardPageState extends State<DashboardPage>
   Widget _miniStat(String title, double value) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(10),
+        height: 65,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: Colors.black.withOpacity(.4),
+          color: Colors.black.withOpacity(.45),
           border: Border.all(color: gold.withOpacity(.3)),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(value.toStringAsFixed(0),
+
+            FittedBox(
+              child: Text(
+                value.toStringAsFixed(0),
                 style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            Text(title,
-                style:
-                const TextStyle(color: Colors.white54, fontSize: 12)),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            const SizedBox(height: 3),
+
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 11,
+              ),
+            )
           ],
         ),
       ),
