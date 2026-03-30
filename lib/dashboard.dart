@@ -1025,6 +1025,896 @@
 //     );
 //   }
 // }
+// import 'dart:math';
+// import 'dart:ui';
+// import 'package:flutter/material.dart';
+// import 'package:shimmer/shimmer.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+//
+// import 'profile_page.dart';
+// import 'about.dart';
+// import 'analytics_page.dart';
+// import 'setting_page.dart';
+//
+// class DashboardPage extends StatefulWidget {
+//   const DashboardPage({super.key});
+//
+//   @override
+//   State<DashboardPage> createState() => _DashboardPageState();
+// }
+//
+// class _DashboardPageState extends State<DashboardPage>
+//     with SingleTickerProviderStateMixin {
+//
+//   static const Color black = Color(0xFF080808);
+//   static const Color gold = Color(0xFFD4AF37);
+//
+//   late AnimationController _controller;
+//
+//   int _currentIndex = 0;
+//   String userName = "Loading...";
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     _controller =
+//     AnimationController(vsync: this, duration: const Duration(seconds: 8))
+//       ..repeat();
+//
+//     fetchUserName();
+//   }
+//
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
+//
+//   /// Safe number
+//   double safeDouble(dynamic value) {
+//     if (value == null) return 0;
+//     if (value is int) return value.toDouble();
+//     if (value is double) return value;
+//     if (value is String) return double.tryParse(value) ?? 0;
+//     return 0;
+//   }
+//
+//   /// Safe date
+//   DateTime? safeDate(dynamic value) {
+//     if (value == null) return null;
+//     if (value is Timestamp) return value.toDate();
+//     if (value is String) return DateTime.tryParse(value);
+//     return null;
+//   }
+//
+//   /// Format date
+//   String formatDate(DateTime? date) {
+//     if (date == null) return "Not set";
+//     return "${date.day}/${date.month}/${date.year}";
+//   }
+//
+//   /// Fetch username
+//   Future<void> fetchUserName() async {
+//     try {
+//       final uid = FirebaseAuth.instance.currentUser?.uid;
+//
+//       if (uid != null) {
+//         final doc =
+//         await FirebaseFirestore.instance.collection('users').doc(uid).get();
+//
+//         if (doc.exists) {
+//           setState(() {
+//             userName = doc['name'] ?? "User";
+//           });
+//         }
+//       }
+//     } catch (e) {
+//       debugPrint("User fetch error: $e");
+//     }
+//   }
+//
+//   void logout() async {
+//     await FirebaseAuth.instance.signOut();
+//     Navigator.pushReplacementNamed(context, 'auth');
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: black,
+//       drawer: _drawer(),
+//       body: Stack(
+//         children: [
+//
+//           /// Animated background
+//           AnimatedBuilder(
+//             animation: _controller,
+//             builder: (_, __) {
+//               return Container(
+//                 decoration: BoxDecoration(
+//                   gradient: RadialGradient(
+//                     center: Alignment(sin(_controller.value * 2 * pi), -0.3),
+//                     radius: 1.6,
+//                     colors: [gold.withOpacity(.15), black],
+//                   ),
+//                 ),
+//               );
+//             },
+//           ),
+//
+//           SafeArea(child: _pages()),
+//         ],
+//       ),
+//       bottomNavigationBar: _bottomNav(),
+//     );
+//   }
+//
+//   Widget _pages() {
+//     switch (_currentIndex) {
+//       case 0:
+//         return _dashboard();
+//       case 1:
+//         return const AnalyticsPage();
+//       case 2:
+//         return const SettingsPage();
+//       default:
+//         return _dashboard();
+//     }
+//   }
+//
+//   /// Drawer
+//   Widget _drawer() {
+//     return Drawer(
+//       backgroundColor: black,
+//       child: SafeArea(
+//         child: Column(
+//           children: [
+//
+//             /// Header
+//             Container(
+//               width: double.infinity,
+//               padding: const EdgeInsets.all(20),
+//               decoration: BoxDecoration(
+//                 gradient: LinearGradient(
+//                   colors: [gold.withOpacity(.25), Colors.transparent],
+//                 ),
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//
+//                   const CircleAvatar(
+//                     radius: 35,
+//                     backgroundColor: gold,
+//                     child: Icon(Icons.person, size: 35, color: Colors.black),
+//                   ),
+//
+//                   const SizedBox(height: 15),
+//
+//                   Text(
+//                     userName,
+//                     style: const TextStyle(
+//                         color: Colors.white,
+//                         fontSize: 20,
+//                         fontWeight: FontWeight.bold),
+//                   ),
+//
+//                   const SizedBox(height: 5),
+//
+//                   Text(
+//                     FirebaseAuth.instance.currentUser?.email ?? "",
+//                     style: const TextStyle(color: Colors.white60),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//
+//             _drawerItem(Icons.dashboard, "Dashboard", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 0);
+//             }),
+//
+//             _drawerItem(Icons.analytics, "Analytics", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 1);
+//             }),
+//
+//             _drawerItem(Icons.settings, "Settings", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 2);
+//             }),
+//
+//             _drawerItem(Icons.person, "Profile", () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => const MyProfile()),
+//               );
+//             }),
+//
+//             _drawerItem(Icons.info_outline, "About", () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => const About()),
+//               );
+//             }),
+//
+//             const Spacer(),
+//
+//             ListTile(
+//               leading: const Icon(Icons.logout, color: Colors.redAccent),
+//               title: const Text("Logout",
+//                   style: TextStyle(
+//                       color: Colors.redAccent,
+//                       fontWeight: FontWeight.bold)),
+//               onTap: logout,
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _drawerItem(IconData icon, String title, VoidCallback onTap) {
+//     return ListTile(
+//       leading: Icon(icon, color: gold),
+//       title: Text(title, style: const TextStyle(color: Colors.white)),
+//       onTap: onTap,
+//     );
+//   }
+//
+//   /// Dashboard
+//   Widget _dashboard() {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//
+//           /// Top bar
+//           Row(
+//             children: [
+//               Builder(
+//                 builder: (context) => IconButton(
+//                   icon: const Icon(Icons.menu, color: gold),
+//                   onPressed: () => Scaffold.of(context).openDrawer(),
+//                 ),
+//               ),
+//               const Spacer(),
+//               const Icon(Icons.notifications, color: gold),
+//             ],
+//           ),
+//
+//           const SizedBox(height: 20),
+//
+//           Shimmer.fromColors(
+//             baseColor: gold,
+//             highlightColor: Colors.white,
+//             child: const Text(
+//               "Welcome Back",
+//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//
+//           const SizedBox(height: 5),
+//
+//           Text(
+//             userName,
+//             style: const TextStyle(
+//                 color: Colors.white,
+//                 fontSize: 30,
+//                 fontWeight: FontWeight.bold),
+//           ),
+//
+//           const SizedBox(height: 25),
+//
+//           const Text(
+//             "Active Investments",
+//             style: TextStyle(
+//                 color: gold,
+//                 fontSize: 20,
+//                 fontWeight: FontWeight.bold),
+//           ),
+//
+//           const SizedBox(height: 15),
+//
+//           Expanded(child: _investorCards()),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   /// Investor cards
+//   Widget _investorCards() {
+//     return StreamBuilder<QuerySnapshot>(
+//       stream: FirebaseFirestore.instance
+//           .collection('investments')
+//           .where('ownerUid',
+//           isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+//           .snapshots(),
+//       builder: (context, snapshot) {
+//
+//         if (!snapshot.hasData) {
+//           return const Center(child: CircularProgressIndicator());
+//         }
+//
+//         final docs = snapshot.data!.docs;
+//
+//         if (docs.isEmpty) {
+//           return const Center(
+//               child: Text("No Investments Found",
+//                   style: TextStyle(color: Colors.white)));
+//         }
+//
+//         return ListView.builder(
+//           itemCount: docs.length,
+//           itemBuilder: (context, index) {
+//
+//             final data = docs[index].data() as Map<String, dynamic>;
+//
+//             return _glassInvestorCard(data);
+//           },
+//         );
+//       },
+//     );
+//   }
+//
+//   /// Glass card
+//   Widget _glassInvestorCard(Map<String, dynamic> data) {
+//
+//     double investment = safeDouble(data['investmentAmount']);
+//     double paid = safeDouble(data['paidTillDate']);
+//     double balance = safeDouble(data['balanceProfit']);
+//
+//     DateTime? startDate = safeDate(data['contractStartDate']);
+//     DateTime? endDate = safeDate(data['contractEndDate']);
+//
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 18),
+//       child: ClipRRect(
+//         borderRadius: BorderRadius.circular(22),
+//         child: BackdropFilter(
+//           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+//           child: Container(
+//             padding: const EdgeInsets.all(18),
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(22),
+//               color: Colors.white.withOpacity(.06),
+//               border: Border.all(color: Colors.white.withOpacity(.15)),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//
+//                 /// Investor Name
+//                 Text(
+//                   data['investorName'] ?? "Investor",
+//                   style: const TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 18,
+//                       fontWeight: FontWeight.bold),
+//                 ),
+//
+//                 const SizedBox(height: 15),
+//
+//                 /// Stats
+//                 Row(
+//                   children: [
+//                     _miniStat("Investment", investment),
+//                     const SizedBox(width: 10),
+//                     _miniStat("Paid", paid),
+//                     const SizedBox(width: 10),
+//                     _miniStat("Balance", balance),
+//                   ],
+//                 ),
+//
+//                 const SizedBox(height: 15),
+//
+//                 /// Dates
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.play_circle,
+//                             color: Colors.greenAccent, size: 18),
+//                         const SizedBox(width: 5),
+//                         Text(
+//                           formatDate(startDate),
+//                           style: const TextStyle(color: Colors.white70),
+//                         ),
+//                       ],
+//                     ),
+//
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.stop_circle,
+//                             color: Colors.redAccent, size: 18),
+//                         const SizedBox(width: 5),
+//                         Text(
+//                           formatDate(endDate),
+//                           style: const TextStyle(color: Colors.white70),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 )
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _miniStat(String title, double value) {
+//     return Expanded(
+//       child: Container(
+//         height: 65,
+//         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//         decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(12),
+//           color: Colors.black.withOpacity(.45),
+//           border: Border.all(color: gold.withOpacity(.3)),
+//         ),
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//
+//             FittedBox(
+//               child: Text(
+//                 value.toStringAsFixed(0),
+//                 style: const TextStyle(
+//                     color: Colors.white,
+//                     fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//
+//             const SizedBox(height: 3),
+//
+//             Text(
+//               title,
+//               style: const TextStyle(
+//                 color: Colors.white54,
+//                 fontSize: 11,
+//               ),
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _bottomNav() {
+//     return BottomNavigationBar(
+//       backgroundColor: black,
+//       selectedItemColor: gold,
+//       unselectedItemColor: Colors.white54,
+//       currentIndex: _currentIndex,
+//       onTap: (i) => setState(() => _currentIndex = i),
+//       items: const [
+//         BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
+//         BottomNavigationBarItem(icon: Icon(Icons.analytics), label: "Analytics"),
+//         BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+//       ],
+//     );
+//   }
+// }
+// Make changes to back buttons in app so that whenever they hit back button it showed always come to dashboard page
+//
+// import 'dart:math';
+// import 'dart:ui';
+// import 'package:flutter/material.dart';
+// import 'package:shimmer/shimmer.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+//
+// import 'profile_page.dart';
+// import 'about.dart';
+// import 'analytics_page.dart';
+// import 'setting_page.dart';
+//
+// class DashboardPage extends StatefulWidget {
+//   final int initialIndex;
+//   const DashboardPage({super.key, this.initialIndex = 0});
+//
+//   @override
+//   State<DashboardPage> createState() => _DashboardPageState();
+// }
+//
+// class _DashboardPageState extends State<DashboardPage>
+//     with SingleTickerProviderStateMixin {
+//   static const Color black = Color(0xFF080808);
+//   static const Color gold = Color(0xFFD4AF37);
+//
+//   late AnimationController _controller;
+//
+//   late int _currentIndex;
+//   String userName = "Loading...";
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     _currentIndex = widget.initialIndex; // Set initial bottom nav index
+//
+//     _controller =
+//     AnimationController(vsync: this, duration: const Duration(seconds: 8))
+//       ..repeat();
+//
+//     fetchUserName();
+//   }
+//
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
+//
+//   /// Safe number conversion
+//   double safeDouble(dynamic value) {
+//     if (value == null) return 0;
+//     if (value is int) return value.toDouble();
+//     if (value is double) return value;
+//     if (value is String) return double.tryParse(value) ?? 0;
+//     return 0;
+//   }
+//
+//   /// Safe date conversion
+//   DateTime? safeDate(dynamic value) {
+//     if (value == null) return null;
+//     if (value is Timestamp) return value.toDate();
+//     if (value is String) return DateTime.tryParse(value);
+//     return null;
+//   }
+//
+//   /// Format date for display
+//   String formatDate(DateTime? date) {
+//     if (date == null) return "Not set";
+//     return "${date.day}/${date.month}/${date.year}";
+//   }
+//
+//   /// Fetch the current user's name
+//   Future<void> fetchUserName() async {
+//     try {
+//       final uid = FirebaseAuth.instance.currentUser?.uid;
+//       if (uid != null) {
+//         final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+//         if (doc.exists) {
+//           setState(() {
+//             userName = doc['name'] ?? "User";
+//           });
+//         }
+//       }
+//     } catch (e) {
+//       debugPrint("User fetch error: $e");
+//     }
+//   }
+//
+//   void logout() async {
+//     await FirebaseAuth.instance.signOut();
+//     Navigator.pushReplacementNamed(context, 'auth');
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: black,
+//       drawer: _drawer(),
+//       body: Stack(
+//         children: [
+//           /// Animated background
+//           AnimatedBuilder(
+//             animation: _controller,
+//             builder: (_, __) {
+//               return Container(
+//                 decoration: BoxDecoration(
+//                   gradient: RadialGradient(
+//                     center: Alignment(sin(_controller.value * 2 * pi), -0.3),
+//                     radius: 1.6,
+//                     colors: [gold.withOpacity(.15), black],
+//                   ),
+//                 ),
+//               );
+//             },
+//           ),
+//           SafeArea(child: _pages()),
+//         ],
+//       ),
+//       bottomNavigationBar: _bottomNav(),
+//     );
+//   }
+//
+//   Widget _pages() {
+//     switch (_currentIndex) {
+//       case 0:
+//         return _dashboard();
+//       case 1:
+//         return const AnalyticsPage();
+//       case 2:
+//         return const SettingsPage();
+//       default:
+//         return _dashboard();
+//     }
+//   }
+//
+//   /// Drawer menu
+//   Widget _drawer() {
+//     return Drawer(
+//       backgroundColor: black,
+//       child: SafeArea(
+//         child: Column(
+//           children: [
+//             /// Header
+//             Container(
+//               width: double.infinity,
+//               padding: const EdgeInsets.all(20),
+//               decoration: BoxDecoration(
+//                 gradient: LinearGradient(
+//                   colors: [gold.withOpacity(.25), Colors.transparent],
+//                 ),
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const CircleAvatar(
+//                     radius: 35,
+//                     backgroundColor: gold,
+//                     child: Icon(Icons.person, size: 35, color: Colors.black),
+//                   ),
+//                   const SizedBox(height: 15),
+//                   Text(
+//                     userName,
+//                     style: const TextStyle(
+//                         color: Colors.white,
+//                         fontSize: 20,
+//                         fontWeight: FontWeight.bold),
+//                   ),
+//                   const SizedBox(height: 5),
+//                   Text(
+//                     FirebaseAuth.instance.currentUser?.email ?? "",
+//                     style: const TextStyle(color: Colors.white60),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//
+//             _drawerItem(Icons.dashboard, "Dashboard", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 0);
+//             }),
+//             _drawerItem(Icons.analytics, "Analytics", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 1);
+//             }),
+//             _drawerItem(Icons.settings, "Settings", () {
+//               Navigator.pop(context);
+//               setState(() => _currentIndex = 2);
+//             }),
+//             _drawerItem(Icons.person, "Profile", () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => const MyProfile()),
+//               );
+//             }),
+//             _drawerItem(Icons.info_outline, "About", () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => const About()),
+//               );
+//             }),
+//
+//             const Spacer(),
+//
+//             ListTile(
+//               leading: const Icon(Icons.logout, color: Colors.redAccent),
+//               title: const Text("Logout",
+//                   style: TextStyle(
+//                       color: Colors.redAccent,
+//                       fontWeight: FontWeight.bold)),
+//               onTap: logout,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _drawerItem(IconData icon, String title, VoidCallback onTap) {
+//     return ListTile(
+//       leading: Icon(icon, color: gold),
+//       title: Text(title, style: const TextStyle(color: Colors.white)),
+//       onTap: onTap,
+//     );
+//   }
+//
+//   /// Dashboard main page
+//   Widget _dashboard() {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           /// Top bar
+//           Row(
+//             children: [
+//               Builder(
+//                 builder: (context) => IconButton(
+//                   icon: const Icon(Icons.menu, color: gold),
+//                   onPressed: () => Scaffold.of(context).openDrawer(),
+//                 ),
+//               ),
+//               const Spacer(),
+//               const Icon(Icons.notifications, color: gold),
+//             ],
+//           ),
+//           const SizedBox(height: 20),
+//           Shimmer.fromColors(
+//             baseColor: gold,
+//             highlightColor: Colors.white,
+//             child: const Text(
+//               "Welcome Back",
+//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//           const SizedBox(height: 5),
+//           Text(
+//             userName,
+//             style: const TextStyle(
+//                 color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+//           ),
+//           const SizedBox(height: 25),
+//           const Text(
+//             "Active Investments",
+//             style: TextStyle(
+//                 color: gold, fontSize: 20, fontWeight: FontWeight.bold),
+//           ),
+//           const SizedBox(height: 15),
+//           Expanded(child: _investorCards()),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   /// Investor cards
+//   Widget _investorCards() {
+//     return StreamBuilder<QuerySnapshot>(
+//       stream: FirebaseFirestore.instance
+//           .collection('investments')
+//           .where('ownerUid',
+//           isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+//           .snapshots(),
+//       builder: (context, snapshot) {
+//         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+//         final docs = snapshot.data!.docs;
+//         if (docs.isEmpty) return const Center(
+//             child: Text("No Investments Found", style: TextStyle(color: Colors.white)));
+//         return ListView.builder(
+//           itemCount: docs.length,
+//           itemBuilder: (context, index) {
+//             final data = docs[index].data() as Map<String, dynamic>;
+//             return _glassInvestorCard(data);
+//           },
+//         );
+//       },
+//     );
+//   }
+//
+//   /// Glass-style investor card
+//   Widget _glassInvestorCard(Map<String, dynamic> data) {
+//     double investment = safeDouble(data['investmentAmount']);
+//     double paid = safeDouble(data['paidTillDate']);
+//     double balance = safeDouble(data['balanceProfit']);
+//     DateTime? startDate = safeDate(data['contractStartDate']);
+//     DateTime? endDate = safeDate(data['contractEndDate']);
+//
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 18),
+//       child: ClipRRect(
+//         borderRadius: BorderRadius.circular(22),
+//         child: BackdropFilter(
+//           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+//           child: Container(
+//             padding: const EdgeInsets.all(18),
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(22),
+//               color: Colors.white.withOpacity(.06),
+//               border: Border.all(color: Colors.white.withOpacity(.15)),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   data['investorName'] ?? "Investor",
+//                   style: const TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 18,
+//                       fontWeight: FontWeight.bold),
+//                 ),
+//                 const SizedBox(height: 15),
+//                 Row(
+//                   children: [
+//                     _miniStat("Investment", investment),
+//                     const SizedBox(width: 10),
+//                     _miniStat("Paid", paid),
+//                     const SizedBox(width: 10),
+//                     _miniStat("Balance", balance),
+//                   ],
+//                 ),
+//                 const SizedBox(height: 15),
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.play_circle, color: Colors.greenAccent, size: 18),
+//                         const SizedBox(width: 5),
+//                         Text(formatDate(startDate), style: const TextStyle(color: Colors.white70)),
+//                       ],
+//                     ),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.stop_circle, color: Colors.redAccent, size: 18),
+//                         const SizedBox(width: 5),
+//                         Text(formatDate(endDate), style: const TextStyle(color: Colors.white70)),
+//                       ],
+//                     ),
+//                   ],
+//                 )
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _miniStat(String title, double value) {
+//     return Expanded(
+//       child: Container(
+//         height: 65,
+//         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+//         decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(12),
+//           color: Colors.black.withOpacity(.45),
+//           border: Border.all(color: gold.withOpacity(.3)),
+//         ),
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             FittedBox(
+//               child: Text(
+//                 value.toStringAsFixed(0),
+//                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//             const SizedBox(height: 3),
+//             Text(title, style: const TextStyle(color: Colors.white54, fontSize: 11))
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   /// Bottom navigation
+//   Widget _bottomNav() {
+//     return BottomNavigationBar(
+//       backgroundColor: black,
+//       selectedItemColor: gold,
+//       unselectedItemColor: Colors.white54,
+//       currentIndex: _currentIndex,
+//       onTap: (i) => setState(() => _currentIndex = i),
+//       items: const [
+//         BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
+//         BottomNavigationBarItem(icon: Icon(Icons.analytics), label: "Analytics"),
+//         BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+//       ],
+//     );
+//   }
+// }
+
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -1032,10 +1922,10 @@ import 'package:shimmer/shimmer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'profile_page.dart';
-import 'about.dart';
 import 'analytics_page.dart';
 import 'setting_page.dart';
+import 'profile_page.dart';
+import 'about.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -1046,7 +1936,6 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage>
     with SingleTickerProviderStateMixin {
-
   static const Color black = Color(0xFF080808);
   static const Color gold = Color(0xFFD4AF37);
 
@@ -1058,11 +1947,9 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   void initState() {
     super.initState();
-
     _controller =
     AnimationController(vsync: this, duration: const Duration(seconds: 8))
       ..repeat();
-
     fetchUserName();
   }
 
@@ -1072,7 +1959,6 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 
-  /// Safe number
   double safeDouble(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value.toDouble();
@@ -1081,7 +1967,6 @@ class _DashboardPageState extends State<DashboardPage>
     return 0;
   }
 
-  /// Safe date
   DateTime? safeDate(dynamic value) {
     if (value == null) return null;
     if (value is Timestamp) return value.toDate();
@@ -1089,21 +1974,16 @@ class _DashboardPageState extends State<DashboardPage>
     return null;
   }
 
-  /// Format date
   String formatDate(DateTime? date) {
     if (date == null) return "Not set";
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  /// Fetch username
   Future<void> fetchUserName() async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
-
       if (uid != null) {
-        final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
-
+        final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
         if (doc.exists) {
           setState(() {
             userName = doc['name'] ?? "User";
@@ -1127,8 +2007,7 @@ class _DashboardPageState extends State<DashboardPage>
       drawer: _drawer(),
       body: Stack(
         children: [
-
-          /// Animated background
+          // Animated background
           AnimatedBuilder(
             animation: _controller,
             builder: (_, __) {
@@ -1143,7 +2022,6 @@ class _DashboardPageState extends State<DashboardPage>
               );
             },
           ),
-
           SafeArea(child: _pages()),
         ],
       ),
@@ -1164,90 +2042,58 @@ class _DashboardPageState extends State<DashboardPage>
     }
   }
 
-  /// Drawer
   Widget _drawer() {
     return Drawer(
       backgroundColor: black,
       child: SafeArea(
         child: Column(
           children: [
-
-            /// Header
+            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [gold.withOpacity(.25), Colors.transparent],
-                ),
+                gradient: LinearGradient(colors: [gold.withOpacity(.25), Colors.transparent]),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const CircleAvatar(
                     radius: 35,
                     backgroundColor: gold,
                     child: Icon(Icons.person, size: 35, color: Colors.black),
                   ),
-
                   const SizedBox(height: 15),
-
-                  Text(
-                    userName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
-
+                  Text(userName,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-
-                  Text(
-                    FirebaseAuth.instance.currentUser?.email ?? "",
-                    style: const TextStyle(color: Colors.white60),
-                  ),
+                  Text(FirebaseAuth.instance.currentUser?.email ?? "",
+                      style: const TextStyle(color: Colors.white60)),
                 ],
               ),
             ),
-
             _drawerItem(Icons.dashboard, "Dashboard", () {
               Navigator.pop(context);
               setState(() => _currentIndex = 0);
             }),
-
             _drawerItem(Icons.analytics, "Analytics", () {
               Navigator.pop(context);
               setState(() => _currentIndex = 1);
             }),
-
             _drawerItem(Icons.settings, "Settings", () {
               Navigator.pop(context);
               setState(() => _currentIndex = 2);
             }),
-
             _drawerItem(Icons.person, "Profile", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MyProfile()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const MyProfile()));
             }),
-
             _drawerItem(Icons.info_outline, "About", () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const About()),
-              );
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const About()));
             }),
-
             const Spacer(),
-
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text("Logout",
-                  style: TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.bold)),
+              title: const Text("Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
               onTap: logout,
             )
           ],
@@ -1264,15 +2110,13 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  /// Dashboard
   Widget _dashboard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          /// Top bar
+          // Top bar with Shimmer logo
           Row(
             children: [
               Builder(
@@ -1282,77 +2126,47 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.notifications, color: gold),
+              Shimmer.fromColors(
+                baseColor: gold,
+                highlightColor: Colors.white,
+                period: const Duration(seconds: 2),
+                child: Image.asset('assets/MILogo.png', width: 40, height: 40),
+              ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Shimmer.fromColors(
             baseColor: gold,
             highlightColor: Colors.white,
-            child: const Text(
-              "Welcome Back",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
+            child: const Text("Welcome Back", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           ),
-
           const SizedBox(height: 5),
-
-          Text(
-            userName,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold),
-          ),
-
+          Text(userName, style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
           const SizedBox(height: 25),
-
-          const Text(
-            "Active Investments",
-            style: TextStyle(
-                color: gold,
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
-          ),
-
+          const Text("Active Investments", style: TextStyle(color: gold, fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
-
           Expanded(child: _investorCards()),
         ],
       ),
     );
   }
 
-  /// Investor cards
   Widget _investorCards() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('investments')
-          .where('ownerUid',
-          isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .where('ownerUid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
           .snapshots(),
       builder: (context, snapshot) {
-
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
         final docs = snapshot.data!.docs;
-
-        if (docs.isEmpty) {
-          return const Center(
-              child: Text("No Investments Found",
-                  style: TextStyle(color: Colors.white)));
-        }
+        if (docs.isEmpty) return const Center(child: Text("No Investments Found", style: TextStyle(color: Colors.white)));
 
         return ListView.builder(
           itemCount: docs.length,
           itemBuilder: (context, index) {
-
             final data = docs[index].data() as Map<String, dynamic>;
-
             return _glassInvestorCard(data);
           },
         );
@@ -1360,13 +2174,10 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  /// Glass card
   Widget _glassInvestorCard(Map<String, dynamic> data) {
-
     double investment = safeDouble(data['investmentAmount']);
     double paid = safeDouble(data['paidTillDate']);
     double balance = safeDouble(data['balanceProfit']);
-
     DateTime? startDate = safeDate(data['contractStartDate']);
     DateTime? endDate = safeDate(data['contractEndDate']);
 
@@ -1386,19 +2197,9 @@ class _DashboardPageState extends State<DashboardPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                /// Investor Name
-                Text(
-                  data['investorName'] ?? "Investor",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
-
+                Text(data['investorName'] ?? "Investor",
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),
-
-                /// Stats
                 Row(
                   children: [
                     _miniStat("Investment", investment),
@@ -1408,35 +2209,22 @@ class _DashboardPageState extends State<DashboardPage>
                     _miniStat("Balance", balance),
                   ],
                 ),
-
                 const SizedBox(height: 15),
-
-                /// Dates
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
                     Row(
                       children: [
-                        const Icon(Icons.play_circle,
-                            color: Colors.greenAccent, size: 18),
+                        const Icon(Icons.play_circle, color: Colors.greenAccent, size: 18),
                         const SizedBox(width: 5),
-                        Text(
-                          formatDate(startDate),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
+                        Text(formatDate(startDate), style: const TextStyle(color: Colors.white70)),
                       ],
                     ),
-
                     Row(
                       children: [
-                        const Icon(Icons.stop_circle,
-                            color: Colors.redAccent, size: 18),
+                        const Icon(Icons.stop_circle, color: Colors.redAccent, size: 18),
                         const SizedBox(width: 5),
-                        Text(
-                          formatDate(endDate),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
+                        Text(formatDate(endDate), style: const TextStyle(color: Colors.white70)),
                       ],
                     ),
                   ],
@@ -1462,25 +2250,9 @@ class _DashboardPageState extends State<DashboardPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
-            FittedBox(
-              child: Text(
-                value.toStringAsFixed(0),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-
+            FittedBox(child: Text(value.toStringAsFixed(0), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
             const SizedBox(height: 3),
-
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 11,
-              ),
-            )
+            Text(title, style: const TextStyle(color: Colors.white54, fontSize: 11))
           ],
         ),
       ),
